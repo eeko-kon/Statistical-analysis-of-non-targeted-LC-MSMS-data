@@ -5,11 +5,11 @@ from src.wilcoxon import *
 
 page_setup()
 
-st.markdown("# Wilcoxon Signed-Rank Sum Test")
+st.markdown("# Wilcoxon Signed-Rank Test")
 
 with st.expander("📖 About"):
     st.markdown(
-        "The wilcoxon signed-rank test is a non-parametric statistical test used to compare two dependent samples (matched pairs) or to compare a single sample against a hypothetical value. It's a non-parametric alternative to the paired t-test and is used when the data is not normally distributed or when the assumptions of the t-test are not met."
+        "The wilcoxon signed-rank test is a non-parametric statistical test used to compare two ***dependent*** samples (matched pairs) or to compare a single sample against a hypothetical value. It's a non-parametric alternative to the paired t-test and is used when the data is not normally distributed or when the assumptions of the t-test are not met."
     )
 
 if not st.session_state.data.empty:

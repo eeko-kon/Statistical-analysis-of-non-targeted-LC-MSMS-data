@@ -9,7 +9,7 @@ st.markdown("# Mann-Whitney U Test")
 
 with st.expander("📖 About"):
     st.markdown(
-        "The Mann-Whitney U test, also known as the Wilcoxon rank sum test, is a non-parametric statistical test used to compare two independent groups. It's particularly useful when the data is not normally distributed or when the assumptions of parametric tests like the independent t-test are violated. Essentially, it assesses whether two groups are likely drawn from the same population, meaning they have the same distribution."
+        "The Mann-Whitney U test, also known as the Wilcoxon rank sum test, is a non-parametric statistical test used to compare two ***independent*** groups. It's particularly useful when the data is not normally distributed or when the assumptions of parametric tests like the independent t-test are violated. Essentially, it assesses whether two groups are likely drawn from the same population, meaning they have the same distribution."
     )
 
 if not st.session_state.data.empty:
