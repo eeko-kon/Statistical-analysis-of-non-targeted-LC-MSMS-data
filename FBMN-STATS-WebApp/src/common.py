@@ -127,13 +127,13 @@ def show_table(df, title="", col="", download=True):
         col = col
     else:
         col = st
-    col.dataframe(df, use_column_width=True)
+    col.dataframe(df, use_container_width=True)
 
 
 def show_fig(fig, download_name, container_width=True):
     st.plotly_chart(
         fig,
-        use_column_width=container_width,
+        use_container_width=container_width,
         config={
             "displaylogo": False,
             "modeBarButtonsToRemove": [
