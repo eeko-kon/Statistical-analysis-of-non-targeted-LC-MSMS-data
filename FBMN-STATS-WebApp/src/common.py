@@ -9,6 +9,8 @@ dataframe_names = ("md",
                    "df_anova",
                    "df_tukey",
                    "df_ttest",
+                   "df_wilcoxon",
+                   "df_mwu",
                    "df_kruskal",
                    "df_dunn",
                    "df_important_features",
@@ -57,9 +59,9 @@ def page_setup():
                 key="image_format",
             )
         v_space(1)
-        st.image("assets/FBMN-STATS-GUIed_logo2.png", use_column_width=True)
+        st.image("assets/FBMN-STATS-GUIed_logo2.png", use_container_width=True)
         v_space(1)
-        st.image("assets/vmol-icon.png", use_column_width=True) 
+        st.image("assets/vmol-icon.png", use_container_width=True) 
         v_space(1)
         st.markdown("## Functional-Metabolomics-Lab")
         c1, c2, c3 = st.columns(3)
