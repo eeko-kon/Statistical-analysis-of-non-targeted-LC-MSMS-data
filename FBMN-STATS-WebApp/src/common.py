@@ -59,9 +59,9 @@ def page_setup():
                 key="image_format",
             )
         v_space(1)
-        st.image("assets/FBMN-STATS-GUIed_logo2.png", use_container_width=True)
+        st.image("assets/FBMN-STATS-GUIed_logo2.png", use_column_width=True)
         v_space(1)
-        st.image("assets/vmol-icon.png", use_container_width=True) 
+        st.image("assets/vmol-icon.png", use_column_width=True) 
         v_space(1)
         st.markdown("## Functional-Metabolomics-Lab")
         c1, c2, c3 = st.columns(3)
@@ -127,13 +127,13 @@ def show_table(df, title="", col="", download=True):
         col = col
     else:
         col = st
-    col.dataframe(df, use_container_width=True)
+    col.dataframe(df, use_column_width=True)
 
 
 def show_fig(fig, download_name, container_width=True):
     st.plotly_chart(
         fig,
-        use_container_width=container_width,
+        use_column_width=container_width,
         config={
             "displaylogo": False,
             "modeBarButtonsToRemove": [
