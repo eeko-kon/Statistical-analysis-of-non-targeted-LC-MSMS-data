@@ -32,6 +32,12 @@ def gen_mwu_data(mwu_attribute, target_groups, alternative, p_correction):
 
 @st.cache_resource
 def plot_mwu(df):
+    
+    if True in df["significance"].apply(lambda x: str(x)):
+            color_list=["#ef553b", "#696880"]
+    else:
+        color_list=["#696880"]
+
     fig = px.scatter(
         x=df["U-val"],
         y=df["p-corrected"].apply(lambda x: -np.log(x)),
@@ -39,7 +45,7 @@ def plot_mwu(df):
         width=600,
         height=600,
         color=df["significance"].apply(lambda x: str(x)),
-        color_discrete_sequence=["#ef553b", "#696880"],
+        color_discrete_sequence=color_list,
         hover_name=df.index,
     )
     
