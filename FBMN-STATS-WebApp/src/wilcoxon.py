@@ -12,6 +12,8 @@ def gen_wilcoxon_data(wilcoxon_attribute, target_groups, alternative, p_correcti
     for col in st.session_state.data.columns:
         group1 = df[col][df[wilcoxon_attribute] == target_groups[0]]
         group2 = df[col][df[wilcoxon_attribute] == target_groups[1]]
+        if len(group1) != len(group2): #Check if the two groups have equal samples
+            raise ValueError("Unequal Sample Sizes")
         result = pg.wilcoxon(group1, group2, alternative)
         result["metabolite"] = col
 
@@ -23,59 +25,51 @@ def gen_wilcoxon_data(wilcoxon_attribute, target_groups, alternative, p_correcti
     wilcoxon.insert(5, "p-corrected", pg.multicomp(wilcoxon["p-val"].astype(float), method=p_correction)[1])
     # add significance
     wilcoxon.insert(6, "significance", wilcoxon["p-corrected"] < 0.05)
-    wilcoxon.insert(7, "st.session_state.wilcoxon_attribute", wilcoxon_attribute)
+    wilcoxon.insert(7, "wilcoxon_attribute", wilcoxon_attribute)
     wilcoxon.insert(8, "A", target_groups[0])
     wilcoxon.insert(9, "B", target_groups[1])
 
     return wilcoxon.sort_values("p-corrected")
 
-
 @st.cache_resource
-def plot_wilcoxon(df):
-    if True in df["significance"].apply(lambda x: str(x)):
-            color_list=["#ef553b", "#696880"]
-    else:
-        color_list=["#696880"]
-
+def get_wilcoxon_plot(wilcoxon):
+    # first plot insignificant features
     fig = px.scatter(
-        x=df["W-val"],
-        y=df["p-corrected"].apply(lambda x: -np.log(x)),
+        x=wilcoxon[wilcoxon["significance"] == False]["W-val"].apply(np.log),
+        y=wilcoxon[wilcoxon["significance"] == False]["p-corrected"].apply(
+            lambda x: -np.log(x)),
         template="plotly_white",
         width=600,
         height=600,
-        color=df["significance"].apply(lambda x: str(x)),
-        color_discrete_sequence=color_list,
-        hover_name=df.index,
     )
-    
-    xlim = [df["W-val"].min(), df["W-val"].max()]
-    x_padding = abs(xlim[1]-xlim[0])/5
-    fig.update_layout(xaxis=dict(range=[xlim[0]-x_padding, xlim[1]+x_padding]))
+    fig.update_traces(marker_color="#696880")
 
-    r = df["significance"].sum()
-    if r > 5:
-        r = 5
-    for i in range(r):
-        fig.add_annotation(
-            x=df["W-val"][i] + (xlim[1] - xlim[0])/12,  # x-coordinate of the annotation
-            y=df["p-corrected"].apply(lambda x: -np.log(x))[
-                i
-            ],  # y-coordinate of the annotation
-            text=df.index[i],  # text to be displayed
-            showarrow=False,  # don't display an arrow pointing to the annotation
-            font=dict(size=10, color="#ef553b"),  # font size of the text
-        )
+    # plot significant features
+    fig.add_scatter(
+        x=wilcoxon[wilcoxon["significance"]]["W-val"].apply(np.log),
+        y=wilcoxon[wilcoxon["significance"]]["p-corrected"].apply(lambda x: -np.log(x)),
+        mode="markers+text",
+        text=wilcoxon.index[:6],
+        textposition="top left",
+        textfont=dict(color="#ef553b", size=14),
+        name="significant",
+    )
 
     fig.update_layout(
         font={"color": "grey", "size": 12, "family": "Sans"},
         title={
-            "text": f"Wilcoxon Signed Rank Sum - FEATURE SIGNIFICANCE - {df.iloc[0, 7].upper()}: {df.iloc[0, 8]} - {df.iloc[0, 9]}",
-            "font_color": "#3E3D53",
+            "text": f"wilcoxon - {st.session_state.wilcoxon_attribute.upper()}",
+            "font_color": "#3E3D53"
         },
-        xaxis_title="W-value",
-        yaxis_title="-Log(p)",
-        showlegend=False,
+        xaxis_title="log(W-val)",
+        yaxis_title="-log(p-val)",
+        showlegend=False
     )
+    fig.update_yaxes(title_standoff=10)
+  
+    # fig.update_yaxes(title_font_size=20)
+    # fig.update_xaxes(title_font_size=20)
+
     return fig
 
 
@@ -132,6 +126,7 @@ def wilcoxon_boxplot(df_wilcoxon, metabolite):
         x0, x1 = 0, 1
     else:
         x0, x1 = st.session_state.wilcoxon_options[0], st.session_state.wilcoxon_options[1]
+    
     # horizontal line
     fig.add_shape(
         type="line",

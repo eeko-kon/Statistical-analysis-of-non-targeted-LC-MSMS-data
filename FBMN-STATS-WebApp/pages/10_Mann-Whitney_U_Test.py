@@ -48,7 +48,7 @@ if not st.session_state.data.empty:
             ["📈 Feature significance", "📊 Single metabolite plots", "📁 Data"]
         )
         with tabs[0]:
-            fig = plot_mwu(st.session_state.df_mwu)
+            fig = get_mwu_plot(st.session_state.df_mwu)
             show_fig(fig, "Mann-Whitney U")
         with tabs[1]:
             cols = st.columns(2)

@@ -35,20 +35,24 @@ if not st.session_state.data.empty:
 
 
     if c2.button("Run Wilcoxon", type="primary", disabled=(len(st.session_state.wilcoxon_options) != 2)):
-        st.session_state.df_wilcoxon = gen_wilcoxon_data(
-            st.session_state.wilcoxon_attribute,
-            st.session_state.wilcoxon_options,
-            st.session_state.wilcoxon_alternative,
-            corrections_map[st.session_state.p_value_correction]
-        )
-        st.rerun()
+        try:
+            st.session_state.df_wilcoxon = gen_wilcoxon_data(
+                st.session_state.wilcoxon_attribute,
+                st.session_state.wilcoxon_options,
+                st.session_state.wilcoxon_alternative,
+                corrections_map[st.session_state.p_value_correction]
+            )
+            st.rerun()
+        except ValueError as e:
+            c2.warning("***Warning*** \n Wilcoxon Signed-Rank analysis requires paired samples. \n selected groups have unequal sample numbers. \n Please review your data or use a non-paired analysis such as the Mann-Whitney U test.")
+            st.session_state.df_wilcoxon = pd.DataFrame()
 
     if not st.session_state.df_wilcoxon.empty:
         tabs = st.tabs(
             ["📈 Feature significance", "📊 Single metabolite plots", "📁 Data"]
         )
         with tabs[0]:
-            fig = plot_wilcoxon(st.session_state.df_wilcoxon)
+            fig = get_wilcoxon_plot(st.session_state.df_wilcoxon)
             show_fig(fig, "t-test")
         with tabs[1]:
             cols = st.columns(2)
@@ -62,3 +66,5 @@ if not st.session_state.data.empty:
 
         with tabs[2]:
             show_table(st.session_state.df_wilcoxon, "wilcoxon-data")
+    
+

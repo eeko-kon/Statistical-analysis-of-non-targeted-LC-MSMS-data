@@ -12,9 +12,8 @@ def gen_mwu_data(mwu_attribute, target_groups, alternative, p_correction):
     for col in st.session_state.data.columns:
         group1 = df[col][df[mwu_attribute] == target_groups[0]]
         group2 = df[col][df[mwu_attribute] == target_groups[1]]
-        result = pg.mwu(group1, group2, alternative)
+        result = pg.mwu(group1, group2, alternative, method="exact")
         result["metabolite"] = col
-
         mwu.append(result)
 
     mwu = pd.concat(mwu).set_index("metabolite")
@@ -23,62 +22,52 @@ def gen_mwu_data(mwu_attribute, target_groups, alternative, p_correction):
     mwu.insert(5, "p-corrected", pg.multicomp(mwu["p-val"].astype(float), method=p_correction)[1])
     # add significance
     mwu.insert(6, "significance", mwu["p-corrected"] < 0.05)
-    mwu.insert(7, "st.session_state.mwu_attribute", mwu_attribute)
+    mwu.insert(7, "mwu_attribute", mwu_attribute)
     mwu.insert(8, "A", target_groups[0])
     mwu.insert(9, "B", target_groups[1])
 
     return mwu.sort_values("p-corrected")
 
-
 @st.cache_resource
-def plot_mwu(df):
-    
-    if True in df["significance"].apply(lambda x: str(x)):
-            color_list=["#ef553b", "#696880"]
-    else:
-        color_list=["#696880"]
-
+def get_mwu_plot(mwu):
+    # first plot insignificant features
     fig = px.scatter(
-        x=df["U-val"],
-        y=df["p-corrected"].apply(lambda x: -np.log(x)),
+        x=mwu[mwu["significance"] == False]["U-val"].apply(np.log),
+        y=mwu[mwu["significance"] == False]["p-corrected"].apply(
+            lambda x: -np.log(x)),
         template="plotly_white",
         width=600,
         height=600,
-        color=df["significance"].apply(lambda x: str(x)),
-        color_discrete_sequence=color_list,
-        hover_name=df.index,
     )
-    
-    xlim = [df["U-val"].min(), df["U-val"].max()]
-    x_padding = abs(xlim[1]-xlim[0])/5
-    fig.update_layout(xaxis=dict(range=[xlim[0]-x_padding, xlim[1]+x_padding]))
+    fig.update_traces(marker_color="#696880")
 
-    r = df["significance"].sum()
-    if r > 5:
-        r = 5
-    for i in range(r):
-        fig.add_annotation(
-            x=df["U-val"][i] + (xlim[1] - xlim[0])/12,  # x-coordinate of the annotation
-            y=df["p-corrected"].apply(lambda x: -np.log(x))[
-                i
-            ],  # y-coordinate of the annotation
-            text=df.index[i],  # text to be displayed
-            showarrow=False,  # don't display an arrow pointing to the annotation
-            font=dict(size=10, color="#ef553b"),  # font size of the text
-        )
+    # plot significant features
+    fig.add_scatter(
+        x=mwu[mwu["significance"]]["U-val"].apply(np.log),
+        y=mwu[mwu["significance"]]["p-corrected"].apply(lambda x: -np.log(x)),
+        mode="markers+text",
+        text=mwu.index[:6],
+        textposition="top left",
+        textfont=dict(color="#ef553b", size=14),
+        name="significant",
+    )
 
     fig.update_layout(
         font={"color": "grey", "size": 12, "family": "Sans"},
         title={
-            "text": f"mwu Signed Rank Sum - FEATURE SIGNIFICANCE - {df.iloc[0, 7].upper()}: {df.iloc[0, 8]} - {df.iloc[0, 9]}",
-            "font_color": "#3E3D53",
+            "text": f"mwu - {st.session_state.mwu_attribute.upper()}",
+            "font_color": "#3E3D53"
         },
-        xaxis_title="U-value",
-        yaxis_title="-Log(p)",
-        showlegend=False,
+        xaxis_title="log(U-val)",
+        yaxis_title="-log(p-val)",
+        showlegend=False
     )
-    return fig
+    fig.update_yaxes(title_standoff=10)
+  
+    # fig.update_yaxes(title_font_size=20)
+    # fig.update_xaxes(title_font_size=20)
 
+    return fig
 
 @st.cache_resource
 def mwu_boxplot(df_mwu, metabolite):
